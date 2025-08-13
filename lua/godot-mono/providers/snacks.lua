@@ -29,7 +29,7 @@ function Snacks:display()
         picker:close()
         self.output(item)
 
-        return true
+        -- return true
     end
 end
 
