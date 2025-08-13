@@ -1,5 +1,8 @@
 local M = {}
 
+---@summary
+-- Gets the Godot executable path.
+---@return string|nil # The path to the Godot executable, or nil if not found.
 M.get_executable = function()
     if M.godot_executable ~= nil then
         return M.godot_executable
@@ -18,6 +21,9 @@ M.get_executable = function()
     end
 end
 
+---@summary
+-- Finds and returns the main scene path from project.godot.
+---@return string|nil # Main scene path, or nil if not found.
 M.find_main_scene = function()
     local project_file = vim.fn.findfile("project.godot", vim.fn.getcwd())
 
