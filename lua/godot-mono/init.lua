@@ -8,21 +8,9 @@ M.godot_executable = nil
 ---@summary
 -- Opens a picker to select and run a Godot scene file.
 M.run = function()
-    local snacks = require("snacks")
-    snacks.picker.pick({
-        layout = {
-            hidden = { "preview" },
-            layout = {
-                width = 0.4,
-                height = 0.5,
-            },
-        },
+    local snacks = require("godot-mono.providers.snacks").new({
         title = " Scenes",
-        finder = "files",
-        format = "file",
-        ft = "tscn",
-        confirm = function(picker, item)
-            picker:close()
+        output = function(item)
             if item == nil then
                 vim.notify("Error running scene", vim.log.levels.ERROR)
                 return
@@ -32,6 +20,25 @@ M.run = function()
 
             M.run_scene(file)
         end,
+    })
+
+    if snacks == nil then
+        return
+    end
+
+    snacks.provider.picker.pick({
+        layout = {
+            hidden = { "preview" },
+            layout = {
+                width = 0.4,
+                height = 0.5,
+            },
+        },
+        finder = "files",
+        format = "file",
+        ft = "tscn",
+        title = snacks.title,
+        confirm = snacks:display(),
     })
 end
 
