@@ -1,37 +1,9 @@
 local M = {}
 
+local utils = require("godot-mono.utils")
+
 M.last_scene = nil
 M.godot_executable = nil
-
-M.get_executable = function()
-    if M.godot_executable ~= nil then
-        return M.godot_executable
-    end
-
-    local extension = vim.fn.has("win32") == 1 and ".exe" or ""
-
-    if vim.fn.executable("godot-mono" .. extension) == 1 then
-        return "godot-mono" .. extension
-    else
-        vim.notify(
-            "Godot executable not found. Please ensure Godot is installed and in your PATH. (e.g. 'godot-mono')",
-            vim.log.levels.ERROR
-        )
-        return nil
-    end
-end
-
-M.find_main_scene = function()
-    local project_file = vim.fn.findfile("project.godot", vim.fn.getcwd())
-
-    local scene_path
-    for line in io.lines(project_file) do
-        scene_path = line:match('run/main_scene="res://([^"]+)"')
-        if scene_path then
-            return scene_path
-        end
-    end
-end
 
 M.run = function()
     local snacks = require("snacks")
@@ -91,7 +63,7 @@ M.run_last_scene = function()
 end
 
 M.run_main_scene = function()
-    local main_scene = M.find_main_scene()
+    local main_scene = utils.find_main_scene()
     if main_scene == nil then
         vim.notify("No main scene found in project.godot", vim.log.levels.ERROR)
         return
@@ -101,7 +73,7 @@ M.run_main_scene = function()
 end
 
 M.setup = function(opts)
-    M.godot_executable = M.get_executable()
+    M.godot_executable = utils.get_executable()
 
     vim.api.nvim_create_user_command("GodotRun", M.run, {})
     vim.api.nvim_create_user_command("GodotRunLast", M.run_last_scene, {})
