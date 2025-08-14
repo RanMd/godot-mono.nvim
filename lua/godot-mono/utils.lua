@@ -23,11 +23,7 @@ end
 M.has_project_file = function()
     local project_file = vim.fn.findfile("project.godot", vim.fn.getcwd())
 
-    if not project_file then
-        return false
-    end
-
-    return true
+    return project_file ~= ""
 end
 
 return M

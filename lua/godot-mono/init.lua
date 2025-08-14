@@ -15,6 +15,8 @@ M.godot_executable = nil
 M.build_command = nil
 ---@type vim.SystemOpts
 M.options = {}
+---@type boolean
+M.has_main = false
 
 ---@param obj vim.SystemCompleted
 ---@param on_success function
@@ -126,9 +128,7 @@ end
 ---@summary
 -- Runs the main scene as defined in project.godot.
 M.run_main_scene = function()
-    local has_main = utils.has_project_file()
-
-    if not has_main then
+    if not M.has_main then
         vim.notify(
             "No main scene defined in project.godot",
             vim.log.levels.ERROR
@@ -141,6 +141,14 @@ end
 
 ---@param opts table Optional setup parameters
 M.setup = function(opts)
+    M.has_main = utils.has_project_file()
+
+    if not M.has_main then
+        return
+    end
+
+    vim.notify("Godot-Mono initialized", vim.log.levels.INFO)
+
     M.godot_executable = utils.get_executable()
 
     M.build_command = { "dotnet", "build", "-c", "Debug" }
