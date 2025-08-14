@@ -2,12 +2,51 @@ local M = {}
 
 local utils = require("godot-mono.utils")
 
+---@type table<string, string>
 local CONSTANTS = {
     MAIN_SCENE = "project.godot",
 }
 
+---@type string?
 M.last_scene = nil
+---@type string?
 M.godot_executable = nil
+---@type string[]?
+M.build_command = nil
+---@type vim.SystemOpts
+M.options = {}
+
+---@param obj vim.SystemCompleted
+---@param on_success function
+M.handle_build = function(obj, on_success)
+    if obj.code == 1 then
+        local message = "Output:" .. obj.stdout
+        vim.notify(
+            message,
+            vim.log.levels.ERROR,
+            { title = "Build process failed with exit code: " .. obj.code }
+        )
+        return
+    end
+
+    vim.notify("Build completed successfully", vim.log.levels.INFO)
+    on_success()
+end
+
+---@param obj vim.SystemCompleted
+M.handle_run = function(obj)
+    if obj.code == 1 then
+        local message = "Output:" .. obj.stdout
+        vim.notify(
+            message,
+            vim.log.levels.ERROR,
+            { title = "Run process failed with exit code: " .. obj.code }
+        )
+        return
+    end
+
+    vim.notify("Run completed successfully", vim.log.levels.INFO)
+end
 
 ---@summary
 -- Runs the specified Godot scene using the Godot executable.
@@ -26,19 +65,19 @@ M.run_scene = function(scene_name)
 
     M.last_scene = scene_name
 
-    vim.notify("Running scene: " .. vim.inspect(godot_command))
+    vim.notify("Building scene")
 
-    -- Run the Godot command asynchronously
-    vim.system(godot_command, { text = true }, function(obj)
-        if obj.stderr and #obj.stderr > 0 then
-            vim.notify(obj.stderr, vim.log.levels.ERROR)
-        end
+    vim.system(M.build_command, M.options, function(obj)
+        M.handle_build(obj, function()
+            vim.notify("Running scene")
+            vim.system(godot_command, M.options, M.handle_run)
+        end)
     end)
 end
 
 ---@summary
 -- Opens a picker to select and run a Godot scene file.
-M.run = function()
+M.select_scene = function()
     local snacks = require("godot-mono.providers.snacks").new({
         title = " Scenes",
         output = function(item)
@@ -104,7 +143,11 @@ end
 M.setup = function(opts)
     M.godot_executable = utils.get_executable()
 
-    vim.api.nvim_create_user_command("GodotRun", M.run, {})
+    M.build_command = { "dotnet", "build", "-c", "Debug" }
+
+    M.options = { text = true, cwd = vim.fn.getcwd() }
+
+    vim.api.nvim_create_user_command("GodotRun", M.select_scene, {})
     vim.api.nvim_create_user_command("GodotRunLast", M.run_last_scene, {})
     vim.api.nvim_create_user_command("GodotRunMain", M.run_main_scene, {})
 end
