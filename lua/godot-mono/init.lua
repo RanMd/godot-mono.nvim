@@ -2,6 +2,9 @@ local M = {}
 
 local utils = require("godot-mono.utils")
 
+---@class GodotMonoOptions
+---@field opts? { godot_executable: string } Optional nested options table.
+
 ---@type table<string, string>
 local CONSTANTS = {
     MAIN_SCENE = "project.godot",
@@ -139,17 +142,16 @@ M.run_main_scene = function()
     M.run_scene(CONSTANTS.MAIN_SCENE)
 end
 
----@param opts table Optional setup parameters
+---@param opts? GodotMonoOptions Optional setup parameters
 M.setup = function(opts)
+    opts = (opts and opts.opts) or opts or {}
     M.has_main = utils.has_project_file()
 
     if not M.has_main then
         return
     end
 
-    vim.notify("Godot-Mono initialized", vim.log.levels.INFO)
-
-    M.godot_executable = utils.get_executable()
+    M.godot_executable = opts.godot_executable or utils.get_executable()
 
     M.build_command = { "dotnet", "build", "-c", "Debug" }
 
