@@ -27,6 +27,8 @@ All command are available only in projects with a project.godot file.
 - Use `:GodotRunLast` to run the last executed scene.
 - Use `:GodotRunMain` to run the main scene as defined in `project.godot`.
 
+<https://github.com/user-attachments/assets/397b72ef-1c41-4316-806c-79d5b2c76837>
+
 ## Dependencies
 
 - [Snacks](https://github.com/folke/snacks.nvim) (for the picker UI)

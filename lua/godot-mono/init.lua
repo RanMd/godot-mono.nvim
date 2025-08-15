@@ -11,19 +11,19 @@ local CONSTANTS = {
 }
 
 ---@type string?
-M.last_scene = nil
+local last_scene = nil
 ---@type string?
-M.godot_executable = nil
----@type string[]?
-M.build_command = nil
+local godot_executable = nil
+---@type string[]
+local build_command = nil
 ---@type vim.SystemOpts
-M.options = {}
+local options = {}
 ---@type boolean
-M.has_main = false
+local has_main = false
 
 ---@param obj vim.SystemCompleted
 ---@param on_success function
-M.handle_build = function(obj, on_success)
+local function handle_build(obj, on_success)
     if obj.code == 1 then
         local message = "Output:" .. obj.stdout
         vim.notify(
@@ -39,7 +39,7 @@ M.handle_build = function(obj, on_success)
 end
 
 ---@param obj vim.SystemCompleted
-M.handle_run = function(obj)
+local function handle_run(obj)
     if obj.code == 1 then
         local message = "Output:" .. obj.stdout
         vim.notify(
@@ -56,33 +56,33 @@ end
 ---@summary
 -- Runs the specified Godot scene using the Godot executable.
 ---@param scene_name string The name of the scene to run
-M.run_scene = function(scene_name)
-    if M.godot_executable == nil then
+local function run_scene(scene_name)
+    if godot_executable == nil then
         vim.notify("Godot executable not set")
         return
     end
 
-    local godot_command = { M.godot_executable }
+    local godot_command = { godot_executable }
 
     if scene_name ~= CONSTANTS.MAIN_SCENE then
         table.insert(godot_command, scene_name)
     end
 
-    M.last_scene = scene_name
+    last_scene = scene_name
 
     vim.notify("Building scene")
 
-    vim.system(M.build_command, M.options, function(obj)
-        M.handle_build(obj, function()
+    vim.system(build_command, options, function(obj)
+        handle_build(obj, function()
             vim.notify("Running scene")
-            vim.system(godot_command, M.options, M.handle_run)
+            vim.system(godot_command, options, handle_run)
         end)
     end)
 end
 
 ---@summary
 -- Opens a picker to select and run a Godot scene file.
-M.select_scene = function()
+local function select_scene()
     local snacks = require("godot-mono.providers.snacks").new({
         title = " Scenes",
         output = function(item)
@@ -93,7 +93,7 @@ M.select_scene = function()
 
             local file = item.file
 
-            M.run_scene(file)
+            run_scene(file)
         end,
     })
 
@@ -119,19 +119,19 @@ end
 
 ---@summary
 -- Runs the last Godot scene that was executed.
-M.run_last_scene = function()
-    if M.last_scene == nil then
+local function run_last_scene()
+    if last_scene == nil then
         vim.notify("No scene was run yet!")
         return
     end
 
-    M.run_scene(M.last_scene)
+    run_scene(last_scene)
 end
 
 ---@summary
 -- Runs the main scene as defined in project.godot.
-M.run_main_scene = function()
-    if not M.has_main then
+local function run_main_scene()
+    if not has_main then
         vim.notify(
             "No main scene defined in project.godot",
             vim.log.levels.ERROR
@@ -139,27 +139,27 @@ M.run_main_scene = function()
         return
     end
 
-    M.run_scene(CONSTANTS.MAIN_SCENE)
+    run_scene(CONSTANTS.MAIN_SCENE)
 end
 
 ---@param opts? GodotMonoOptions Optional setup parameters
 M.setup = function(opts)
     opts = (opts and opts.opts) or opts or {}
-    M.has_main = utils.has_project_file()
+    has_main = utils.has_project_file()
 
-    if not M.has_main then
+    if not has_main then
         return
     end
 
-    M.godot_executable = opts.godot_executable or utils.get_executable()
+    godot_executable = opts.godot_executable or utils.get_executable()
 
-    M.build_command = { "dotnet", "build", "-c", "Debug" }
+    build_command = { "dotnet", "build", "-c", "Debug" }
 
-    M.options = { text = true, cwd = vim.fn.getcwd() }
+    options = { text = true, cwd = vim.fn.getcwd() }
 
-    vim.api.nvim_create_user_command("GodotRun", M.select_scene, {})
-    vim.api.nvim_create_user_command("GodotRunLast", M.run_last_scene, {})
-    vim.api.nvim_create_user_command("GodotRunMain", M.run_main_scene, {})
+    vim.api.nvim_create_user_command("GodotRun", select_scene, {})
+    vim.api.nvim_create_user_command("GodotRunLast", run_last_scene, {})
+    vim.api.nvim_create_user_command("GodotRunMain", run_main_scene, {})
 end
 
 return M
